@@ -1,8 +1,11 @@
 version: '2.0'
 services:
   homer:
+    container_name: homer
     image: b4bz/homer:latest
+    restart: always
     volumes:
     - /volume1/docker/homer:/www/assets
     ports:
     - 1280:8080
+    mem_swappiness: -1 # temp workaround for synology+portainer
