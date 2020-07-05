@@ -3,9 +3,24 @@ services:
   homer:
     container_name: homer
     image: b4bz/homer:latest
-    restart: always
+    extends: 
+      file: compose-common.yml
+      service: app
     volumes:
     - /volume1/docker/homer:/www/assets
     ports:
     - 1280:8080
-    mem_swappiness: -1 # temp workaround for synology+portainer
+
+  unifi-controller:
+    container_name: unifi-controller
+    image: linuxserver/unifi-controller:amd64-latest
+    extends: 
+      file: compose-common.yml
+      service: app
+    volumes:
+    - /volume1/docker/unifi-controller:/config
+    ports:
+    - 8080:8080
+    - 8443:8443
+    - 3478:3478/udp
+    - 10001:10001/udp
