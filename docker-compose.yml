@@ -58,11 +58,9 @@ services:
     - NET_ADMIN
     devices:
     - /dev/net/tun
-    sysctls:
-    - net.ipv6.conf.all.disable_ipv6=0
     volumes:
     - /volume1/docker/transmission/config/tun.sh:/etc/rc.d/S01tun.sh:ro
-    - /volume1/docker/transmission/downloads:/data
+    - /volume2/media/transmission/downloads:/data
     - /volume1/docker/transmission/config/resolv.conf:/etc/resolv.conf:ro
     - /volume1/docker/transmission/openvpn/default.ovpn:/etc/openvpn/custom/default.ovpn:ro
     - /etc/localtime:/etc/localtime:ro
@@ -87,4 +85,52 @@ services:
     - TRANSMISSION_UMASK=2
     - PUID=1034
     - PGID=100
+    mem_swappiness: -1 # temp workaround for synology+portainer
+
+  jackett:
+    container_name: jackett
+    image: linuxserver/jackett:latest
+    restart: always
+    volumes:
+    - /volume1/docker/jackett/config:/config
+    - /volume1/docker/jackett/Downloads:/downloads
+    ports:
+    - 9117:9117
+    environment: 
+    - AUTO_UPDATE=true
+    - PUID=1034
+    - PGID=100
+    - TZ=Asia/Hong_Kong
+    mem_swappiness: -1 # temp workaround for synology+portainer
+
+  sonarr:
+    container_name: sonarr
+    image: linuxserver/sonarr:latest
+    restart: always
+    volumes:
+    - /volume1/docker/sonarr/config:/config
+    - /volume2/media:/media
+    ports:
+    - 8989:8989
+    environment: 
+    - AUTO_UPDATE=true
+    - PUID=1034
+    - PGID=100
+    - TZ=Asia/Hong_Kong
+    mem_swappiness: -1 # temp workaround for synology+portainer
+
+  radarr:
+    container_name: radarr
+    image: linuxserver/radarr:latest
+    restart: always
+    volumes:
+    - /volume1/docker/radarr/config:/config
+    - /volume2/media:/media
+    ports:
+    - 7878:7878
+    environment: 
+    - AUTO_UPDATE=true
+    - PUID=1034
+    - PGID=100
+    - TZ=Asia/Hong_Kong
     mem_swappiness: -1 # temp workaround for synology+portainer
