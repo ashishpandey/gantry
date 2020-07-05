@@ -1,0 +1,8 @@
+version: '2.0'
+services:
+  homer:
+    image: b4bz/homer:latest
+    volumes:
+    - /volume1/docker/homer:/www/assets
+    ports:
+    - 1280:8080
