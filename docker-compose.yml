@@ -3,20 +3,21 @@ services:
   homer:
     container_name: homer
     image: b4bz/homer:latest
-    extends: 
-      file: compose-common.yml
-      service: app
+    restart: always
     volumes:
     - /volume1/docker/homer:/www/assets
     ports:
     - 1280:8080
-
+    environment:
+    - PID=1034
+    - GID=100
+    - TZ=Asia/Hong_Kong
+    mem_swappiness: -1 # temp workaround for synology+portainer
+    
   unifi-controller:
     container_name: unifi-controller
     image: linuxserver/unifi-controller:amd64-latest
-    extends: 
-      file: compose-common.yml
-      service: app
+    restart: always
     volumes:
     - /volume1/docker/unifi-controller:/config
     ports:
@@ -24,3 +25,66 @@ services:
     - 8443:8443
     - 3478:3478/udp
     - 10001:10001/udp
+    environment:
+    - PUID=1034
+    - PGID=100
+    - TZ=Asia/Hong_Kong
+    mem_swappiness: -1 # temp workaround for synology+portainer
+
+  influxdb-grafana:
+    container_name: influxdb-grafana
+    image: philhawthorne/docker-influxdb-grafana:latest
+    restart: always
+    volumes:
+    - /volume1/docker/var/lib/grafana:/var/lib/grafana:rw
+    - /volume1/docker/var/lib/influxdb:/var/lib/influxdb:rw
+    ports:
+    - 3003:3003 # grafana
+    - 3004:8083 # chronograf
+    - 8086:8086 # influxdb
+    - 3005:8088
+    - 22022:22  # ssh
+    environment:
+    - PUID=1034
+    - PGID=100
+    - TZ=Asia/Hong_Kong
+    mem_swappiness: -1 # temp workaround for synology+portainer
+
+  transmission-ovpn:
+    container_name: transmission-ovpn
+    image: haugene/transmission-openvpn:latest
+    restart: always
+    cap_add:
+    - NET_ADMIN
+    devices:
+    - /dev/net/tun
+    sysctls:
+    - net.ipv6.conf.all.disable_ipv6=0
+    volumes:
+    - /volume1/docker/transmission/config/tun.sh:/etc/rc.d/S01tun.sh:ro
+    - /volume1/docker/transmission/downloads:/data
+    - /volume1/docker/transmission/config/resolv.conf:/etc/resolv.conf:ro
+    - /volume1/docker/transmission/openvpn/default.ovpn:/etc/openvpn/custom/default.ovpn:ro
+    - /etc/localtime:/etc/localtime:ro
+    ports:
+    - 8889:9091
+    environment:
+    - LOCAL_NETWORK=192.168.1.0/16
+    - OPENVPN_OPTS:=--inactive 3600 --ping 10 --ping-exit 60
+    - OPENVPN_PROVIDER=CUSTOM
+    - OPENVPN_USERNAME=change_me
+    - OPENVPN_PASSWORD=change_me
+    - TRANSMISSION_DOWNLOAD_QUEUE_SIZE=30
+    - TRANSMISSION_IDLE_SEEDING_LIMIT=10080
+    - TRANSMISSION_IDLE_SEEDING_LIMIT_ENABLED=true
+    - TRANSMISSION_PEER_LIMIT_GLOBAL=500
+    - TRANSMISSION_PEER_LIMIT_PER_TORRENT=50
+    - TRANSMISSION_PEER_PORT=51413
+    - TRANSMISSION_RATIO_LIMIT=3
+    - TRANSMISSION_RATIO_LIMIT_ENABLED=true
+    - TRANSMISSION_RPC_AUTHENTICATION_REQUIRED=false
+    - TRANSMISSION_RPC_ENABLED=true
+    - TRANSMISSION_UMASK=2
+    - PUID=1034
+    - PGID=100
+    mem_swappiness: -1 # temp workaround for synology+portainer

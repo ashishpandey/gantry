@@ -1,9 +1,0 @@
-app:
-  mem_swappiness: -1 # temp workaround for synology+portainer
-  restart: always
-  environment:
-    PID: 1034
-    GID: 100
-    PUID: 1034
-    PGID: 100
-    TZ: Asia/Hong_Kong
