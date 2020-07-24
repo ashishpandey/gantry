@@ -68,7 +68,7 @@ services:
     - 8889:9091
     environment:
     - LOCAL_NETWORK=192.168.1.0/16
-    - OPENVPN_OPTS:=--inactive 3600 --ping 10 --ping-exit 60
+    - OPENVPN_OPTS=--inactive 3600 --ping 10 --ping-exit 60
     - OPENVPN_PROVIDER=CUSTOM
     - OPENVPN_USERNAME=change_me
     - OPENVPN_PASSWORD=change_me
@@ -130,6 +130,21 @@ services:
     - 7878:7878
     environment: 
     - AUTO_UPDATE=true
+    - PUID=1034
+    - PGID=100
+    - TZ=Asia/Hong_Kong
+    mem_swappiness: -1 # temp workaround for synology+portainer
+
+  telegraf:
+    container_name: telegraf
+    image: telegraf:latest
+    restart: always
+    volumes:
+    - /volume1/docker/telegraf/mibs:/usr/share/snmp/mibs:ro
+    - /volume1/docker/telegraf/config:/etc/telegraf:ro
+    - /volume1/docker/telegraf/logs:/var/logs/telegraf
+    - /var/run/docker.sock:/var/run/docker.sock
+    environment: 
     - PUID=1034
     - PGID=100
     - TZ=Asia/Hong_Kong
