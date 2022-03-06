@@ -7,7 +7,7 @@ services:
     volumes:
     - /volume1/docker/homer:/www/assets
     ports:
-    - 1280:8080
+    - "1280:8080"
     environment:
     - PID=1034
     - GID=100
@@ -21,10 +21,10 @@ services:
     volumes:
     - /volume1/docker/unifi-controller:/config
     ports:
-    - 8080:8080
-    - 8443:8443
-    - 3478:3478/udp
-    - 10001:10001/udp
+    - "8080:8080"
+    - "8443:8443"
+    - "3478:3478/udp"
+    - "10001:10001/udp"
     environment:
     - PUID=1034
     - PGID=100
@@ -39,11 +39,11 @@ services:
     - /volume1/docker/var/lib/grafana:/var/lib/grafana:rw
     - /volume1/docker/var/lib/influxdb:/var/lib/influxdb:rw
     ports:
-    - 3003:3003 # grafana
-    - 3004:8083 # chronograf
-    - 8086:8086 # influxdb
-    - 3005:8088
-    - 22022:22  # ssh
+    - "3003:3003" # grafana
+    - "3004:8083" # chronograf
+    - "8086:8086" # influxdb
+    - "3005:8088"
+    - "22022:22"  # ssh
     environment:
     - PUID=1034
     - PGID=100
@@ -65,7 +65,7 @@ services:
     - /volume1/docker/transmission/openvpn/default.ovpn:/etc/openvpn/custom/default.ovpn:ro
     - /etc/localtime:/etc/localtime:ro
     ports:
-    - 8889:9091
+    - "8889:9091"
     environment:
     - LOCAL_NETWORK=192.168.1.0/16
     - OPENVPN_OPTS=--inactive 3600 --ping 10 --ping-exit 60
@@ -95,7 +95,7 @@ services:
     - /volume1/docker/jackett/config:/config
     - /volume1/docker/jackett/Downloads:/downloads
     ports:
-    - 9117:9117
+    - "9117:9117"
     environment: 
     - AUTO_UPDATE=true
     - PUID=1034
@@ -111,7 +111,7 @@ services:
     - /volume1/docker/sonarr/config:/config
     - /volume2/media:/media
     ports:
-    - 8989:8989
+    - "8989:8989"
     environment: 
     - AUTO_UPDATE=true
     - PUID=1034
@@ -127,7 +127,7 @@ services:
     - /volume1/docker/radarr/config:/config
     - /volume2/media:/media
     ports:
-    - 7878:7878
+    - "7878:7878"
     environment: 
     - AUTO_UPDATE=true
     - PUID=1034
@@ -149,3 +149,56 @@ services:
     - PGID=100
     - TZ=Asia/Hong_Kong
     mem_swappiness: -1 # temp workaround for synology+portainer
+
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    restart: always
+    hostname: pihole
+    domainname: fence.apandey.com
+    cap_add:
+      - NET_ADMIN                   # This is required for version 4.1 onwards
+      - NET_BIND_SERVICE
+      - SYS_NICE
+      - CHOWN
+    cap_drop:
+      - NET_RAW                     # only needed for DHCP, lets be paranoid
+    networks:
+      pihole_network:              # use macvlan network binding to separate IP
+        ipv4_address: 192.168.1.18
+    dns:
+      - 127.0.0.1
+      - 192.168.1.1
+    ports:
+      - "443:443/tcp"
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "80:80/tcp"
+    environment:                    # Optional environment configuration
+      ServerIP: 192.168.1.18        # Change is this matches your NAS IP
+      WEBPASSWORD: change_me
+      TZ: Asia/Hong_Kong
+      PIHOLE_DNS_: "208.67.222.222;208.67.220.220"
+      DNSSEC: "true"
+      DHCP_ACTIVE: "false"
+      VIRTUAL_HOST: pihole.app.apandey.com
+      PIHOLE_UID: 1034
+      PIHOLE_GID: 100
+      WEB_UID: 1034
+      WEB_GID: 100
+      DNSMASQ_USER: root
+    volumes:
+    - /volume1/docker/pihole/dnsmasq.d:/etc/dnsmasq.d
+    - /volume1/docker/pihole/pihole:/etc/pihole
+    mem_swappiness: -1 # temp workaround for synology+portainer
+
+networks:
+  pihole_network:                         # Name of network
+    driver: macvlan                       # Use the macvlan network driver
+    driver_opts:
+      parent: bond0                       # interface to route network through
+    ipam:
+      config:
+        - subnet: 192.168.1.1/24        # Specify subnet
+          gateway: 192.168.1.1          # Gateway address
+          ip_range: 192.168.1.16/30     # allowed allocations
